@@ -2,16 +2,29 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#define MAX 100
-#define RANGO 50
+#include <stdbool.h>	//BUSCAR LA BIBLIOTECA PARA PONER UN CARACTER EN MAYUSCULA PARA MAS EZ
+#include "tabdb.h"
 
-void fecha();
-void user();
+#define MAX 100
+#define RANGO 30
+
+void encabezado();
 void empresa();
+void user();
+void fecha();
+int longitud();
+char extension();
 char naturaleza();
-void longitud();
-void exonerado();
+void producto();
+char exonerado();
+void report();
+void ampliar();
+void delete();
+void modificar();
+void modif_name();
+void modif_dom();
+void modif_rif();
+void modif_total();
 
 struct usuario // Si te sientes capaz poner telefono
 {
@@ -21,47 +34,78 @@ struct usuario // Si te sientes capaz poner telefono
 	int rif;
 } datos;
 
+struct data		//Vamos a tener todo lo refetente a un producto ordenado en esta struct 
+{
+	char item[40];
+	char definiton[100];
+	int amount;
+	float price;
+};
+
+
 int main()
 {
+
+	FILE *archivo, *reemplazo;
 	int opcion;
 	int code = 0;
-	FILE *archivo;
-	archivo = fopen("facturas.txt", "w");
-	while(opcion != 5){
+
+	while(opcion != 5){	
 	printf("1) Crear facturas\n");
 	printf("2) Reporte de Facturas\n");	
 	printf("3) Eliminar Factura\n");
 	printf("4) Modificar factura\n");
+	printf("5) Salir\n");
 	scanf("%d", &opcion);
-	code++;
+	// BUSCAR LA FORMA QUE NO SE BUGUEE AL PONER LETRAS, 
 		switch(opcion){
-			case 1:
-				fprintf(archivo, "\n------ℱ𝒶𝒸𝓉𝓊𝓇𝒶------\n");
-				empresa(archivo);
+			case 1:	
+				archivo = fopen("facturas.txt", "a+");
+				code++;
+				fprintf(archivo, "%.4d", code);
+			//	empresa(archivo);
 				user(archivo);
 				fecha(archivo);
-				fprintf(archivo, "Codigo unico: %.4d\n", code);
-				exonerado(archivo);
+				producto(archivo);		
+				fclose(archivo);	
 				break;
-			case 2:
+			case 2:	
+				archivo = fopen("facturas.txt", "r+");	// BUSCAR LA FORMA DE AMPLIAR LA FACTURA AMPLIADA
+				
+				report(archivo);
+
+				fclose(archivo);
 				break;
-			case 3:
+			case 3: 
+				archivo = fopen("facturas.txt", "r+");
+				
+				delete(archivo);
+
+				fclose(archivo);
 				break;
-			case 4:
+			case 4: 
+				archivo = fopen("facturas.txt", "r+");
+				
+				modificar(archivo);
+
+				fclose(archivo);
 				break;
-			case 5:
+			case 5: // VOLVER ESTO EN UN ESCAPE
+				printf("Haz salido del programa\n");
+				break;
+			default:
+				printf("Opcion no valida\n");
+				getchar();
+				getchar();
 				break;
 			}
 			system("cls");
 		}
-	
+
+	}
 
 
-	fclose(archivo);
-	return 0;
-}
-
-void empresa(FILE *archivo){
+/* void empresa(FILE *archivo){
 	const char rif_emp[20] = "J-123456789";
 	const char name_emp[RANGO] = "Kiosco humilde";
 	const char ubicacion_emp[MAX] = "Calle: Asfaltada, Estado: Bolivar, Ciudad: Puerto Ordaz";
@@ -71,30 +115,46 @@ void empresa(FILE *archivo){
 	fprintf(archivo, "%s\n", name_emp);
 	fprintf(archivo, "%s\n", ubicacion_emp);
 	fprintf(archivo, "Telf: %s\n", telef_emp);
+}	*/
+
+void encabezado(FILE *archivo){	// DEJAR SEPARADA PARA QUE SE ENTIENDA MEJOR 
+	fprintf(archivo, "Code:\t");
+	fprintf(archivo, "Usuarios\t");
+	fprintf(archivo, "Domicilio:\t");
+	fprintf(archivo, "Rif:\t");
+	fprintf(archivo, "Fecha:\t");
+	fprintf(archivo, "Precio:\t\n");
 }
 
 void fecha(FILE *archivo){
     time_t fecha = time(NULL);
     struct tm tm = *localtime(&fecha);
 
-	fprintf(archivo, "Fecha de la factura: \n\n");
-	fprintf(archivo, "%.2d-%.2d-%.4d\t\t %.2d:%.2d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min);
+	fprintf(archivo, "%.2d-%.2d-%.4d\t", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+	fflush(stdin);
+	system("cls");
 }
 
 void user(FILE *archivo){
 	char aux;
-	char rif;
 	int code = 0;
 	fflush(stdin);
 	printf("Dime tu nombre: \n"); gets(datos.nombre);
+//	extension(datos.nombre, strlen(datos.nombre)); // APLICAR MAS LA FUNCION extension() y pos arreglarla
 	printf("Dime tu domicilio: \n"); gets(datos.domicilio); //Extender con Calle, ciudad, y mas (usar la facturas de ejemplos)
 	aux = naturaleza();
-	printf("Dame el numero de tu rif: \n" ); scanf("%d", &datos.rif);
-	longitud(datos.rif);
-	fprintf(archivo, "\nDatos del usuario: \n\n");
-	fprintf(archivo, "Nombre: %s\n", datos.nombre);
-	fprintf(archivo, "Domicilio: %s\n", datos.domicilio);
-	fprintf(archivo, "Rif: %c-%d\n\n", aux, datos.rif);
+	printf("Dame el numero de tu rif: \n" ); 
+	printf("%c-", aux); scanf("%d", &datos.rif); // CREAR FUNCION PARA QUE NO SE REPITA LOS RIFS
+	int digits = longitud(datos.rif);
+	while(digits != 9){
+		printf("Rif invalido introduzcalo nuevamente\n");
+	 	printf("%c-", aux);  scanf("%d", &datos.rif);
+	 	digits = longitud(datos.rif);
+	}
+	fprintf(archivo, "\t");
+	fprintf(archivo, "%s\t", datos.nombre);
+	fprintf(archivo, "%s\t", datos.domicilio);
+	fprintf(archivo, "%c-%d\t", aux, datos.rif);
 }
 
 char naturaleza(){
@@ -124,43 +184,215 @@ char naturaleza(){
 		break;
 
 		default:
-			printf("Opcion no vaalida cabron\n");
+			printf("Opcion no valida \n");
 			return naturaleza();
 	}
 }
 
-	void longitud(){
+	int longitud(int num){
 		bool valor;
 		int aux;
 		int cont = 0;
-		aux = datos.rif;
+		aux = num;
 		while(aux != 0){
 			aux /= 10;
 			cont++;
 		}
-
-		if(cont == 9){
-			valor = true;
-			printf("El rif es valido\n");
-		}
-		else if(cont < 9 || cont > 9){
-			valor = false;
-			printf("Rif no valido\n");
-			exit(1);
-		}
+		return cont;
 }
 
-void exonerado(FILE *archivo){
-	archivo = fopen("exempt", "r");
-	char producto[40];
-	const char exempt[700];
-	fclose(archivo);
-	printf("Dime el producto\n");
-	for(int i = 0; i < 10; i++){
-		scanf("%s", producto);
-		if(strcmp(exempt, producto) == 0){
-			printf("Producto exento de iva\n");
+char extension(char line[], int exten){
+	while(exten <= 31 || exten >= 6){
+		printf("Introduzca un valor valido\n");
+		gets(line);
+		exten = strlen(line);
+		if(exten < 31 || exten >= 6){
+			return *line;
 		}
 	}
+}
 
+void producto(FILE *archivo){
+	int amount, i;
+	int cantidad;
+	float total = 0, cont = 0;
+	printf("Cantidad de producto: \n"); scanf("%d", &amount);
+
+	fflush(stdin);		
+	struct data product;
+
+	for(i = 0; i < amount; i++){
+		printf("Dime el producto: \n"); gets(product.item);	
+
+		printf("Establece una descripcion del producto: \n"); gets(product.definiton);
+		printf("Precio del producto: \n"); scanf("%f", &product.price);
+
+		total += product.price;
+		
+	}	
+
+		fprintf(archivo, "%.2f$\t\n", total);
+} 
+
+
+/* char exonerado(FILE *archivo, char item[]){
+	char exon[800];
+	int i;
+	archivo = fopen("exempt.txt", "r+");	
+	read_col_file(archivo, 0, 0, exon);
+	if(strcmp(exon, item) == 0){
+		printf("Exonerado\n");
+	}
+	else {
+		printf("No exonerado\n");
+	}	
+	
+	getchar();
+	system("cls");
+	fclose(archivo);
+}	*/
+
+void report(FILE *archivo){
+	char rp[800];
+	int i;
+	int code;
+	char s;
+	printf("Para ver todas las facturas... Teclee <1>\n");
+	printf("Para las facturas segun su codigo unico... Teclee <2>\n");
+	printf("Para las facturas en un rango de tiempo... Teclee <3>\n");
+	scanf("%d", &i);
+	switch(i){
+		case 1:
+	while(fgets(rp, 100, archivo) != NULL){
+		printf("%s\n", rp);
+	}	
+	getchar();
+	getchar();
+		break;
+		case 2:
+		printf("Dime el codigo unico de la factura\n");
+		scanf("%d", &code);
+		system("cls");
+		read_line_file(archivo, code, rp);
+		printf("%s\n", rp);
+
+		printf("Desea ver la factura ampliada?\n");
+		printf("Presione <S> para Si\n");
+		printf("Presione <N> para No\n");
+		while(s != 'N'){	// Probar en la mañana para que recuerdes lo que dijiste a las 01:43am
+		printf("Escoja una opcion\n");
+		fflush(stdin);
+		scanf("%c", &s);
+		if(s == 'S'){
+			ampliar(archivo, code);
+		}		
+	}
+
+		break;
+		case 3: //A VER QUE SE ME OCURRE XD
+		printf("En construccion xd\n");
+		break;
+	}
+
+}
+
+void ampliar(FILE *archivo, int code){	
+	char id[10], name[30], city[30], rif[12], date[20], total[20]; 
+	read_col_file(archivo, code, 0, id);
+	read_col_file(archivo, code, 1, name);
+	read_col_file(archivo, code, 2, city);
+	read_col_file(archivo, code, 3, rif);
+	read_col_file(archivo, code, 4, date);
+	read_col_file(archivo, code, 5, total);
+	printf("--Factura---\n");
+	printf("ID: %s\n", id);
+	printf("Name: %s\n", name);
+	printf("City: %s\n", city);
+	printf("Rif: %s\n", rif);
+	printf("Date: %s\n", date);
+	printf("Total: %s\n", total);
+}
+
+void delete(FILE *archivo){
+
+	int i;
+	bool dec = true;
+	printf("Dime la factura que desea eliminar\n");
+	scanf("%d", &i);	
+	while(dec = true){
+		printf("Opcion invalida\n");
+		scanf("%d", &i);{
+			if(i != 0){
+				dec == false;
+				break;
+			}
+		}
+	}
+	encabezado(archivo);
+	delete_line_file(archivo, i);	
+}
+
+void modificar(FILE *archivo){
+	int opcion;
+	int fact;
+	int col;
+	printf("Que factura desea modificar?\n");
+	scanf("%d", &fact);
+	while(opcion != 5){
+	printf("Que desea modificar de la factura?\n");
+	printf("Teclee <1> para cambiar el nombre\n");
+	printf("Teclee <2> para cambiar el domicilio\n");
+	printf("Teclee <3> para cambiar el rif\n");
+	printf("Teclee <4> para cambiar el total a pagar\n");	
+	printf("Teclee <5> para salir\n");
+	scanf("%d", &opcion);
+	fflush(stdin);		
+		if(opcion == 1){
+		col = 1;
+		modif_name(archivo, fact, col);
+		}
+		if(opcion == 2){
+		col = 2;
+		modif_dom(archivo, fact, col);
+		}	
+		if(opcion == 3){
+		col = 3;
+		modif_rif(archivo, fact, col);
+		}
+		if(opcion == 4){
+		col = 5;
+		modif_total(archivo, fact, col);
+		}
+		system("cls");	
+	}
+
+}	
+	// USAR EL EJEMPLO DE MODIFICAR FICHEROS PARA EVITAR QUE SE DESCOLOQUE LOS CODE
+	//ARREGLAR BUGS DE LOS MODIF_ Y BUG A PARTIR DEL ULTIMO USUARIO
+void modif_name(FILE *archivo,int row, int col){	
+	char new_name[RANGO];
+	printf("Nuevo nombre del usuario: \n");
+	gets(new_name);
+	modify_col_file(archivo, row, col, new_name);
+}
+
+void modif_dom(FILE *archivo,int row, int col){
+	char new_domicilio[RANGO];
+	printf("Nuevo domicilio del usuario: \n");
+	gets(new_domicilio);
+	modify_col_file(archivo, row, col, new_domicilio);
+}
+
+void modif_rif(FILE *archivo,int row, int col){
+	char new_rif[RANGO];
+	printf("Nuevo rif del usuario: \n");
+	gets(new_rif);
+	modify_col_file(archivo, row, col, new_rif);
+}
+
+void modif_total(FILE *archivo,int row, int col){
+	char new_total[RANGO];
+	printf("Nuevo total a pagar: \n");
+	gets(new_total);
+	modify_col_file(archivo, row, col, new_total);
 }
