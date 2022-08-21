@@ -2,29 +2,32 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <stdbool.h>	//BUSCAR LA BIBLIOTECA PARA PONER UN CARACTER EN MAYUSCULA PARA MAS EZ
 #include "tabdb.h"
 
 #define MAX 100
 #define RANGO 30
 
-void encabezado();
+void encabezado(FILE *fp);
 void empresa();
-void user();
-void fecha();
-int longitud();
-char extension();
+void user(FILE *fp);
+void fecha(FILE *fp);
+int longitud(int num);
+char extension(); //En prueba
 char naturaleza();
-void producto();
-char exonerado();
-void report();
-void ampliar();
-void delete();
-void modificar();
-void modif_name();
-void modif_dom();
-void modif_rif();
-void modif_total();
+// CREAR FUNCION PARA COMPARAR LOS RIF Y NO PERMITIR QUE SE REPITAN
+void producto(FILE *fp);
+// char exonerado();
+void report(FILE *fp);
+void ampliar(FILE *fp, int code);
+void delete(FILE *fp);
+void modificar(FILE *fp);
+
+void modif_name(FILE *fp, int row, int col);
+void modif_dom(FILE *fp, int row, int col);
+void modif_rif(FILE *fp, int row, int col);
+void modif_total(FILE *fp, int row, int col);
 
 struct usuario // Si te sientes capaz poner telefono
 {
@@ -144,9 +147,12 @@ void user(FILE *archivo){
 	printf("Dime tu domicilio: \n"); gets(datos.domicilio); //Extender con Calle, ciudad, y mas (usar la facturas de ejemplos)
 	aux = naturaleza();
 	printf("Dame el numero de tu rif: \n" ); 
-	printf("%c-", aux); scanf("%d", &datos.rif); // CREAR FUNCION PARA QUE NO SE REPITA LOS RIFS
+	printf("%c-", aux); scanf("%d", &datos.rif); 
+	// CREAR FUNCION PARA QUE NO SE REPITA LOS RIFS
 	int digits = longitud(datos.rif);
 	while(digits != 9){
+		fflush(stdin);
+		printf("Nota: Solamente se admiten numeros\n");
 		printf("Rif invalido introduzcalo nuevamente\n");
 	 	printf("%c-", aux);  scanf("%d", &datos.rif);
 	 	digits = longitud(datos.rif);
@@ -190,7 +196,6 @@ char naturaleza(){
 }
 
 	int longitud(int num){
-		bool valor;
 		int aux;
 		int cont = 0;
 		aux = num;
@@ -257,7 +262,7 @@ void report(FILE *archivo){
 	int i;
 	int code;
 	char s;
-	printf("Para ver todas las facturas... Teclee <1>\n");
+	printf("Para ver todas las facturas... Teclee <1>\n");	// Hacer un contador para que cada X cantidad de facturas hacer un getchar();
 	printf("Para las facturas segun su codigo unico... Teclee <2>\n");
 	printf("Para las facturas en un rango de tiempo... Teclee <3>\n");
 	scanf("%d", &i);
