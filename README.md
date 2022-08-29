@@ -1,0 +1,1 @@
+La funcion CaracteresEspeciales ha sido reemplazada para que solo admito los numero del 0 al 9... y creo que es lo unico que debes saber ZZzzzzzz
