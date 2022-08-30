@@ -1,5 +1,6 @@
-0001	Andres_David	Cunaguaro	V123456789	29-08-2022	10.99	
-0002	Ben_Parker	New_York	P123456789	29-08-2022	1.99	
-0003	Jose_Vals	Los_Olivos	J123456789	29-08-2022	5.99	
-0004	Pan_Salao	Caracas	G123456789	29-08-2022	9.88	
-0005	Estan_dando_el	Expreso_del_oriente_xd	E123456789	29-08-2022	11.98	
+0001	David_Andres	Cunaguaro	V123456789	29-08-2022	10.99
+0002	Ben_Parker	United_States	J123456789	29-08-2022	1.99
+0003	Jose_Vals	Los_Olivos	P123456784	29-08-2022	5.99
+0004	Pan_Salao	Caracas	G123456789	29-08-2022	9.59
+0005	Estan_dando_el	Expreso_del_oriente_xd	E123456789	29-08-2022	11.98
+0006	Andres_Manuel	Nuevo_Mexico	E123456736	29-08-2022	29.99
