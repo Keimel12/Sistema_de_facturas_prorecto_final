@@ -18,10 +18,11 @@ char naturaleza();	// Devuelve la naturaleza de la persona
 char unit_str(char str[]);	// Fusiona dos string en uno usando un '_' como un separador
 void no_repeat(FILE *fp, char rif[]);	// Evitara ingresar un rif repetido (MISMO RIF Y NATURALEZA)
 void ampliar(FILE *fp, int code);	// Ampliara la factura (En vez de visualizarla en fila sera en columna)
+int admit_rif(char nationality[], char str[]);
 
 // Los 4 aspectos que permitira modificar la factura: 
 void modify_name(FILE *origen, FILE *destino, char new_name[], int i);
-void modify_city(FILE *origen, FILE *destino, char new_domicilio[], int i);
+void modify_city(FILE *origen, FILE *destino, char new_domicilio[], int fila);
 void modify_rif(FILE *origen, FILE *destino, char aux[], char new_rif[], int i);
 void modify_mount(FILE *origen, FILE *destino, float new_total, int i);
 
@@ -93,22 +94,14 @@ int main()
     bool valor = false;	
 	int digits;
 
-	while(valor == false){
-		valor = false;			
 		printf("Nota: Solamente se admiten numeros\n");
 		printf("Dame el numero de tu rif: \n" ); 	
-		fflush(stdin);
+		fflush(stdin);	 	
 	 	printf("%s-", aux);  scanf("%s", &datos.rif);
-	 	caracteresEspeciales(datos.rif);
-	 	digits = extension(datos.rif);
-	 	if(digits == 9 && caracteresEspeciales(datos.rif) == false){
-	 		valor = true;
-	 	}	else 	{
-	 		valor = false;
-	 	}
-	 	printf("Rif invalido introduzcalo nuevamente\n");
-	 	getchar();
-	 	system("cls");
+		while(admit_rif(aux, datos.rif) == -1){	
+			printf("Rif invalido, pon uno correcto\n");
+	 		system("cls");
+	 		printf("%s-", aux);  scanf("%s", &datos.rif);
 	}	
 
 	strcpy(fusion, aux);
@@ -144,7 +137,11 @@ int main()
 			break;
 			case 50:	
 			archivo = fopen("facturas.txt", "r+");
-				
+			
+			if(archivo == NULL){
+				printf("Error al abrir el archivo\n");
+			}
+
 	char rp[200];
 	char code_2[5];
 	char s;
@@ -154,11 +151,11 @@ int main()
 	scanf("%d", &opcion);
 	switch(opcion){	
 		case 1:	
-	while(fgets(rp, 100, archivo) != NULL){	//
-		printf("%s\n", rp);					//
-	}										//	Convertir en una funcion
-	getchar();								//
-	getchar();								//
+	while(fgets(rp, 100, archivo) != NULL){	
+		printf("%s\n", rp);					
+	}										
+	getchar();								
+	getchar();								
 		break;
 		case 2:	// Mostrar una factura en especifico y si deseas (presionando s o S) te mostrara la factura ampliada
 		printf("Dime el codigo unico de la factura\n");
@@ -196,16 +193,19 @@ int main()
 			break;
 
 			case 51: 
-			archivo = fopen("facturas.txt", "r+");
-				
-	reemplazo = fopen("temporal", "w+");
+		archivo = fopen("facturas.txt", "r+");		
+		reemplazo = fopen("temporal", "w+");
 	
+		if(archivo == NULL || reemplazo == NULL){
+			printf("Error al abrir el archivo\n");
+		}
+
 	int id;
 	int linea;
 
 	printf("Dime la factura que desea eliminar\n");
+	fflush(stdin);
 	scanf("%d", &id);	
-	
 	linea = 0;
 
         while (!feof(archivo))
@@ -225,23 +225,32 @@ int main()
 			break;
 
 			case 52: 
-			archivo = fopen("facturas.txt", "r+");
-			
-	int fact;
+		archivo = fopen("facturas.txt", "r+");
+		reemplazo = fopen("temporal", "w+");
+		
+		if(archivo == NULL || reemplazo == NULL){
+			printf("Error al abrir el archivo\n");
+		}
 
-	FILE *reemplazo;
-    reemplazo = fopen("temporal", "w+");
-
+	char fact[5];
+    int fila;
 	printf("Que factura desea modificar?\n");
-	scanf("%d", &fact);
+	scanf("%s", &fact);	
+	fila = search_data_file(archivo, 0, fact);	//
+												//
+    printf("%d\n", fila);						//	ARREGLAR BUGAZO DE QUE SE COME LAS FACTURAS POR ENCIMA DE LA INDICADA
+    getchar();									//
+    getchar();									//
+
 	while(opcion != 5){
+
 	printf("Que desea modificar de la factura?\n");
 	printf("Teclee <1> para cambiar el nombre\n");
 	printf("Teclee <2> para cambiar el domicilio\n");
 	printf("Teclee <3> para cambiar el rif\n");
 	printf("Teclee <4> para cambiar el total a pagar\n");	
-	printf("Teclee <5> para salir\n");
-	scanf("%d", &opcion);
+	printf("Teclee <5> para salir\n");	
+	scanf("%d", &opcion);		
 	fflush(stdin);		
 	system("cls");
  if(opcion == 1){
@@ -254,7 +263,7 @@ int main()
 
 	unit_str(new_name);
 
-    modify_name(archivo, reemplazo, new_name, fact);	// Funcion para cambiar el nombre
+    modify_name(archivo, reemplazo, new_name, fila);	// Funcion para cambiar el nombre
     break;
   }
 
@@ -267,7 +276,7 @@ if(opcion == 2){
 	
 	unit_str(new_domicilio);
     
-    modify_city(archivo, reemplazo, new_domicilio, fact);	// Funcion para cambiar el domicilio
+    modify_city(archivo, reemplazo, new_domicilio, fila);	// Funcion para cambiar el domicilio
     break;
 	} 
 
@@ -286,7 +295,7 @@ if(opcion == 3){
 	int digits = extension(new_rif);
 	caracteresEspeciales(new_rif);
 
-    modify_rif(archivo, reemplazo, aux, new_rif, fact);	// Funcion para cambiar el rif
+    modify_rif(archivo, reemplazo, aux, new_rif, fila);	// Funcion para cambiar el rif
     break;
 	}		
 
@@ -294,7 +303,7 @@ if(opcion == 4){
     float new_total;
     printf("Nuevo total a pagar: \n");
     scanf("%f", &new_total);
-    modify_mount(archivo, reemplazo, new_total, fact);	// Funcion para cambia el total
+    modify_mount(archivo, reemplazo, new_total, fila);	// Funcion para cambia el total
     break;
     	}
 		system("cls");	
@@ -345,9 +354,26 @@ void fecha(FILE *archivo){	// Horario local
 	system("cls");
 }
 
+int admit_rif(char nationality[], char str[]){	
+	 	int digits;
+	 	caracteresEspeciales(str);
+	 	digits = extension(str);
+	 	if(digits == 9 && caracteresEspeciales(str) == false){
+	 		return 0;
+	 	}	else 	{
+	 		return -1;
+	 	}
+	 	return -1;
+}
+
 void no_repeat(FILE *archivo, char rif[]){	// No permitira que se repita el mismo rif
 	char cont[100];
 	archivo = fopen("facturas.txt", "r");
+
+	if(archivo == NULL){
+		printf("Error al abrir el archivo\n");
+	}
+
 	int fila = search_data_file(archivo, 3, rif);
   	read_col_file(archivo, fila, 3, cont);
 
@@ -365,7 +391,7 @@ void factura_user(FILE *archivo, int code, char name[], char city[], char rif[])
 	fprintf(archivo, "%s\t", rif);
 }
 
-char unit_str(char str[]){
+char unit_str(char str[]){	// Convierte los espacios en '_'
 	int j;
  	for (j = 0; str[j] != '\0'; j++) {
     	if (str[j] == ' ') str[j] = '_';
@@ -464,7 +490,7 @@ void modify_name(FILE *archivo, FILE *reemplazo, char new_name[], int i){
         }
 }
 
-void modify_city(FILE *archivo, FILE *reemplazo, char new_domicilio[], int i){
+void modify_city(FILE *archivo, FILE *reemplazo, char new_domicilio[], int fila){
 
     int code; 
     char str[30];
@@ -480,7 +506,7 @@ void modify_city(FILE *archivo, FILE *reemplazo, char new_domicilio[], int i){
         {
         linea++;
         fscanf(archivo, "%d %s %s %s %s %f\n", &code, str, str_aux, rif_num, date, &foat);
-            if (linea == i)             
+            if (linea == fila)             
 			fprintf(reemplazo, "%.4d\t%s\t%s\t%s\t%s\t%.2f\n", code, str, new_domicilio, rif_num, date, foat);
                          
             else   
