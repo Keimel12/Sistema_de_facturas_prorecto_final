@@ -11,14 +11,16 @@
 #define ESC 27
 
 void empresa();	// Muestra los datos de la empresa	
-void factura_user(FILE *archivo, int cod, char name[], char city[], char rif[]);	//Muestra en el .txt los datos del usuario y mas
+void factura_user(FILE *archivo, int code, char name[], char city[], char rif[]);	//Muestra en el .txt los datos del usuario y mas
 void fecha(FILE *fp);	// Muestra la fecha en eñ .txt
 int extension(char str[]);	// Calcula la cantidad de caracteres de una cadena de palabras
 char naturaleza();	// Devuelve la naturaleza de la persona
 char unit_str(char str[]);	// Fusiona dos string en uno usando un '_' como un separador
 void no_repeat(FILE *fp, char rif[]);	// Evitara ingresar un rif repetido (MISMO RIF Y NATURALEZA)
 void ampliar(FILE *fp, int code);	// Ampliara la factura (En vez de visualizarla en fila sera en columna)
-int admit_rif(char nationality[], char str[]);
+int admit_rif(char nationality[], char str[]);	//	Establece si un rif es admitido o no es valido
+int ubication_code(FILE *archivo, char str[]);	//	Busca la aparicion del elemento tecleado
+
 
 // Los 4 aspectos que permitira modificar la factura: 
 void modify_name(FILE *origen, FILE *destino, char new_name[], int i);
@@ -47,17 +49,16 @@ int main()
 {
 	FILE *archivo, *reemplazo;
 
-	int code = 0;
-	char str[30];
-	char str_aux[30];
-	char rif_num[20];
-	char date[20];
-	float foat;
+	int code = 0;	// Variable que sera el codigo unico de la factura... que se incrementara en uno cada vez que crearemos una nueva factura
+	char str[30];	// Leera el nombre del usuario en la facturas.txt
+	char str_aux[30];	//Leera el domicilio de usuario en la facturas.txt
+	char rif_num[20];	// Leera el rif del usuario en la facturas.txt
+	char date[20];	// Leera la fecha de creacion de la factura en facturas.txt
+	float foat;	// Leera el monto total a pagar en facturas.txt
 
 	char aux[2]; // Volvera el origen en un string para poder usar las funciones strcat, y strcpy
 	char origen; // Obtendra la naturaleza de la persona... V, E, P, J, G
 	char fusion[20];	// Concatenara el origen junto al rif para tener un solo string
-	int j;	
 
 	int opcion;
 
@@ -69,7 +70,7 @@ int main()
 	printf("Presione la tecla Esc para salir\n");
 	opcion = getch();
 		switch(opcion){
-			case 49:
+			case 49:	// CREACION DE UNA FACTURA NUEVA
 			archivo = fopen("facturas.txt", "a+");
 
 	while (!feof(archivo)) {	// No permitira que se repita el mismo numero de codigo en el .txt
@@ -79,11 +80,19 @@ int main()
 
 	fflush(stdin);
 	printf("Dime tu nombre: \n"); gets(datos.nombre);
+	
+	if(datos.nombre[0] == NULL){	// Si el usuario no teclea nada (solamente presiona enter) mostrara el texto Undefined en la facturas.txt
+		strcpy(datos.nombre, "Undefined");
+	}
  		
 	unit_str(datos.nombre);
 
 	printf("Dime tu domicilio: \n"); gets(datos.domicilio);
-		
+	
+	if(datos.domicilio[0] == NULL){
+		strcpy(datos.domicilio, "Undefined");
+	}	
+
 	unit_str(datos.domicilio);
 
 	origen = naturaleza();
@@ -135,7 +144,7 @@ int main()
 	fclose(archivo);
 
 			break;
-			case 50:	
+			case 50:	// REPORTE DE FACTURAS
 			archivo = fopen("facturas.txt", "r+");
 			
 			if(archivo == NULL){
@@ -163,7 +172,7 @@ int main()
 		scanf("%s", code_2);
 
 		int fila;
-		fila = search_data_file(archivo, 0, code_2);	// Aplicar esta funcion en otros lugares del codigo
+		fila = search_data_file(archivo, 0, code_2);
 		read_line_file(archivo, fila, rp);	
 
 		system("cls");
@@ -192,7 +201,7 @@ int main()
 			fclose(archivo);
 			break;
 
-			case 51: 
+			case 51: 	// ELIMINACION DE UNA FACTURA EXISTENTE
 		archivo = fopen("facturas.txt", "r+");		
 		reemplazo = fopen("temporal", "w+");
 	
@@ -200,7 +209,7 @@ int main()
 			printf("Error al abrir el archivo\n");
 		}
 
-	int id;
+	int id;	// Sera el codigo unico de la factura
 	int linea;
 
 	printf("Dime la factura que desea eliminar\n");
@@ -224,7 +233,7 @@ int main()
 			fclose(archivo);
 			break;
 
-			case 52: 
+			case 52: 	// MODIFICACION DE FACTURAS
 		archivo = fopen("facturas.txt", "r+");
 		reemplazo = fopen("temporal", "w+");
 		
@@ -233,14 +242,11 @@ int main()
 		}
 
 	char fact[5];
-    int fila;
+    int fila;	
 	printf("Que factura desea modificar?\n");
 	scanf("%s", &fact);	
-	fila = search_data_file(archivo, 0, fact);	//
-												//
-    printf("%d\n", fila);						//	ARREGLAR BUGAZO DE QUE SE COME LAS FACTURAS POR ENCIMA DE LA INDICADA
-    getchar();									//
-    getchar();									//
+	fila = ubication_code(archivo, fact) + 1;	// Creamos esta funcion para obtener la fila exacta en donde esta el code de la fila...									
+// Obviamos la posibilidad de usar el search_data_file en la fila 240 por que retorna un -1 y borra todo el fichero txt.
 
 	while(opcion != 5){
 
@@ -253,6 +259,7 @@ int main()
 	scanf("%d", &opcion);		
 	fflush(stdin);		
 	system("cls");
+ 
  if(opcion == 1){
 
     char new_name[RANGO];
@@ -260,6 +267,10 @@ int main()
     printf("Nuevo nombre del usuario: \n");
     fflush(stdin); 
     gets(new_name);
+
+    if(new_name[0] == NULL){
+		strcpy(new_name, "Undefined");
+	}
 
 	unit_str(new_name);
 
@@ -274,6 +285,10 @@ if(opcion == 2){
     fflush(stdin); 
     gets(new_domicilio);
 	
+    if(new_domicilio[0] == NULL){
+		strcpy(new_domicilio, "Undefined");
+	}
+
 	unit_str(new_domicilio);
     
     modify_city(archivo, reemplazo, new_domicilio, fila);	// Funcion para cambiar el domicilio
@@ -305,17 +320,19 @@ if(opcion == 4){
     scanf("%f", &new_total);
     modify_mount(archivo, reemplazo, new_total, fila);	// Funcion para cambia el total
     break;
-    	}
-		system("cls");	
+    }
+
+if(opcion == 5){ // Forma temporal... o no... de arreglar el bug (El bug es, al  presionar la opcion '5' se borra toda la informacion del txt de facturas)
+	return 0; 
 	}
 
-    fclose(archivo);
+    	system("cls");
+	}
+
+	fclose(archivo);	
     fclose(reemplazo);
     remove("facturas.txt");
     rename("temporal", "facturas.txt");
-
-			fclose(archivo);
-			break;
 
 			case ESC:	// ESC tiene registrara el codigo ASCII de la tecla Esc del teclado por ende al presionarla se quitara el programa
 				printf("Haz salido del programa\n");
@@ -330,6 +347,14 @@ if(opcion == 4){
 		}
 
 	}
+
+int ubication_code(FILE *archivo, char str[]){	//	Aparicion del string
+	int fila;
+	archivo = fopen("facturas.txt","r");
+	fila = search_data_file(archivo, 0, str);
+	fclose(archivo);
+	return fila;
+}
 
 
 void empresa(FILE *archivo){	// Datos de la empresa x2
@@ -354,7 +379,7 @@ void fecha(FILE *archivo){	// Horario local
 	system("cls");
 }
 
-int admit_rif(char nationality[], char str[]){	
+int admit_rif(char nationality[], char str[]){	// Determina si es valido o no el rif
 	 	int digits;
 	 	caracteresEspeciales(str);
 	 	digits = extension(str);
@@ -385,18 +410,31 @@ void no_repeat(FILE *archivo, char rif[]){	// No permitira que se repita el mism
 }
 
 void factura_user(FILE *archivo, int code, char name[], char city[], char rif[]){	// Funcion con los datos del usuario
-	fprintf(archivo, "%.4d\t", code);
-	fprintf(archivo, "%s\t", name);
-	fprintf(archivo, "%s\t", city);
-	fprintf(archivo, "%s\t", rif);
+	char cont[200];
+	char aux[10];
+										//
+	snprintf(aux, 5, "%.4d", code);		//
+										//
+	strcpy(cont, aux);					// Pensar a fondo si implementar el monto total del producto y la fecha tambien
+	strcat(cont, "\t");					//
+	strcat(cont, name);					//
+	strcat(cont, "\t");					//
+	strcat(cont, city);
+	strcat(cont, "\t");
+	strcat(cont, rif);
+	strcat(cont, "\t");
+
+	add_line_file(archivo, cont);
+
 }
 
-char unit_str(char str[]){	// Convierte los espacios en '_'
+char unit_str(char str[]){	// Convierte los espacios en '_' y pondra Undefined si el usuario le da enter de una
 	int j;
  	for (j = 0; str[j] != '\0'; j++) {
     	if (str[j] == ' ') str[j] = '_';
     }
-    return str[j];
+
+	return str[j];
 }
 
 
