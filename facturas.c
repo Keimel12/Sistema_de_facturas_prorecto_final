@@ -11,21 +11,19 @@
 #define ESC 27
 
 void empresa();	// Muestra los datos de la empresa	
-void factura_user(FILE *archivo, int code, char name[], char city[], char rif[]);	//Muestra en el .txt los datos del usuario y mas
-void fecha(FILE *fp);	// Muestra la fecha en eñ .txt
+void factura_user(FILE *archivo, int code, char name[], char city[], char rif[], float total);	//	Muestra en pantalla todos los elementos de la factura (falta productos)
 int extension(char str[]);	// Calcula la cantidad de caracteres de una cadena de palabras
-char naturaleza();	// Devuelve la naturaleza de la persona
-char unit_str(char str[]);	// Fusiona dos string en uno usando un '_' como un separador
+char naturaleza(char opcion);	// Devuelve la naturaleza de la persona
+char unit_str(char str[]);	// Fusiona dos string en uno usando un '_' como un separador y evita que el usuario sobrepase la cantidad de caracteres establecidos
 void no_repeat(FILE *fp, char rif[]);	// Evitara ingresar un rif repetido (MISMO RIF Y NATURALEZA)
-void ampliar(FILE *fp, int code);	// Ampliara la factura (En vez de visualizarla en fila sera en columna)
 int admit_rif(char nationality[], char str[]);	//	Establece si un rif es admitido o no es valido
 int ubication_code(FILE *archivo, char str[]);	//	Busca la aparicion del elemento tecleado
 
-
 // Los 4 aspectos que permitira modificar la factura: 
+// PD: MODIFICARLAS
 void modify_name(FILE *origen, FILE *destino, char new_name[], int i);
 void modify_city(FILE *origen, FILE *destino, char new_domicilio[], int fila);
-void modify_rif(FILE *origen, FILE *destino, char aux[], char new_rif[], int i);
+char modify_rif(FILE *origen, FILE *destino, char aux[], char new_rif[], int i);
 void modify_mount(FILE *origen, FILE *destino, float new_total, int i);
 
 struct usuario // Struct con los datos del usuario
@@ -80,22 +78,40 @@ int main()
 
 	fflush(stdin);
 	printf("Dime tu nombre: \n"); gets(datos.nombre);
-	
-	if(datos.nombre[0] == NULL){	// Si el usuario no teclea nada (solamente presiona enter) mostrara el texto Undefined en la facturas.txt
-		strcpy(datos.nombre, "Undefined");
+	while(unit_str(datos.nombre) == -1){	// Si el usuario no teclea nada (solamente presiona enter) mostrara el texto Undefined en la facturas.txt
+		
+		if(datos.nombre[0] == NULL){	
+			strcpy(datos.nombre, "Undefined");
+		}
+		printf("Haz superado el limite de caracteres del nombre... Ingrese un nombre correcto\n");
+		printf("Dime tu nombre: \n"); gets(datos.nombre);
+		system("cls");		
 	}
- 		
-	unit_str(datos.nombre);
 
 	printf("Dime tu domicilio: \n"); gets(datos.domicilio);
-	
-	if(datos.domicilio[0] == NULL){
-		strcpy(datos.domicilio, "Undefined");
-	}	
+	while(unit_str(datos.domicilio) == -1){	// Si el usuario no teclea nada (solamente presiona enter) mostrara el texto Undefined en la facturas.txt
+		
+		if(datos.domicilio[0] == NULL){	
+			strcpy(datos.domicilio, "Undefined");
+		}
+		printf("Haz superado el limite de caracteres del domicilio.. Ingrese un domicilio correcto\n");
+		printf("Dime domicilio: \n"); gets(datos.domicilio);
+		system("cls");
+	}
+	system("cls");
+	printf("Presione usando las mayusculas su opcion\n"); 
+	printf("Eres una persona natural, teclea <V>\n");
+	printf("Eres una persona natural extranjera, teclea <E>\n");
+	printf("Eres una persona natural extranjera sin cedula, teclea <P>\n");
+	printf("Eres un ente gubernamental, teclea <G>\n");
+	printf("Eres un contribuyente juridico, teclea <J>\n");
+	scanf("%c", &origen);
 
-	unit_str(datos.domicilio);
-
-	origen = naturaleza();
+	while(naturaleza(origen) == -1){
+		printf("Caracter invalido\n");
+		getchar();
+		scanf("%c", &origen);
+	}
 
 	aux[1] = '\0';
 	aux[0] = origen;
@@ -112,14 +128,11 @@ int main()
 	 		system("cls");
 	 		printf("%s-", aux);  scanf("%s", &datos.rif);
 	}	
-
+	system("cls");
 	strcpy(fusion, aux);
 	strcat(fusion, datos.rif);
 
-	no_repeat(archivo, fusion);  // Pensar una mejor forma que aventar al usuario fuera del programa XD
-	factura_user(archivo, code, datos.nombre, datos.domicilio, fusion);	
-
-	fecha(archivo);		
+	no_repeat(archivo, fusion);  // Pensar una mejor forma que aventar al usuario fuera del programa XD		
 
 	int amount, i;
 	int cantidad;
@@ -138,8 +151,8 @@ int main()
 
 		total += product.price;	// El total a pagar 
 	}	
-
-	fprintf(archivo, "%.2f\t\n", total);
+	
+	factura_user(archivo, code, datos.nombre, datos.domicilio, fusion, total);
 	
 	fclose(archivo);
 
@@ -152,7 +165,7 @@ int main()
 			}
 
 	char rp[200];
-	char code_2[5];
+	char code_2[5];	// Mostrara la factura que concuerde con el codigo unico tecleado
 	char s;
 
 	printf("Para ver todas las facturas... Teclee <1>\n");
@@ -187,17 +200,30 @@ int main()
 		fflush(stdin);
 		scanf("%c", &s);
 		if(s == 's' || s == 'S'){
-			ampliar(archivo, fila);
+			char id[10], name[30], city[30], rif[12], date[20], total[20]; 
+			
+			read_col_file(archivo, fila, 0, id);
+			read_col_file(archivo, fila, 1, name);
+			read_col_file(archivo, fila, 2, city);
+			read_col_file(archivo, fila, 3, rif);
+			read_col_file(archivo, fila, 4, date);
+			read_col_file(archivo, fila, 5, total);
+			printf("--Datos de la empresa---\n");
+			empresa(archivo);   
+			printf("--Factura---\n");			
+			printf("ID: %s\n", id);
+			printf("Name: %s\n", name);
+			printf("City: %s\n", city);
+			printf("Rif: %s\n", rif);
+			printf("Date: %s\n", date);
+			printf("Total: %s\n", total);
+			
 			getchar();
 			getchar();
-		} 
-		else {
-			break;
-		}	
+		} 	
 
 		break;
 	}
-
 			fclose(archivo);
 			break;
 
@@ -268,11 +294,15 @@ int main()
     fflush(stdin); 
     gets(new_name);
 
-    if(new_name[0] == NULL){
-		strcpy(new_name, "Undefined");
+	while(unit_str(new_name) == -1){	// Si el usuario no teclea nada (solamente presiona enter) mostrara el texto Undefined en la facturas.txt
+		
+		if(new_name[0] == NULL){	
+			strcpy(new_name, "Undefined");
+		}
+		printf("Haz superado el limite de caracteres del nombre.. Ingrese un nombre correcto\n");
+		printf("Dime el nuevo nombre: \n"); gets(new_name);
+		system("cls");
 	}
-
-	unit_str(new_name);
 
     modify_name(archivo, reemplazo, new_name, fila);	// Funcion para cambiar el nombre
     break;
@@ -285,11 +315,15 @@ if(opcion == 2){
     fflush(stdin); 
     gets(new_domicilio);
 	
-    if(new_domicilio[0] == NULL){
-		strcpy(new_domicilio, "Undefined");
+	while(unit_str(new_domicilio) == -1){	// Si el usuario no teclea nada (solamente presiona enter) mostrara el texto Undefined en la facturas.txt
+		
+		if(new_domicilio[0] == NULL){	
+			strcpy(new_domicilio, "Undefined");
+		}
+		printf("Haz superado el limite de caracteres del domicilio.. Ingrese un domicilio correcto\n");
+		printf("Dime el nuevo domicilio: \n"); gets(new_domicilio);
+		system("cls");
 	}
-
-	unit_str(new_domicilio);
     
     modify_city(archivo, reemplazo, new_domicilio, fila);	// Funcion para cambiar el domicilio
     break;
@@ -299,7 +333,22 @@ if(opcion == 3){
 
   char new_rif[10];
 
-  origen = naturaleza();
+  	system("cls");
+	printf("Presione usando las mayusculas su opcion\n"); 
+	printf("Eres una persona natural, teclea <V>\n");
+	printf("Eres una persona natural extranjera, teclea <E>\n");
+	printf("Eres una persona natural extranjera sin cedula, teclea <P>\n");
+	printf("Eres un ente gubernamental, teclea <G>\n");
+	printf("Eres un contribuyente juridico, teclea <J>\n");
+	scanf("%c", &origen);
+
+  	naturaleza(origen);
+
+  	while(naturaleza(origen) == -1){
+		printf("Caracter invalido\n");
+		getchar();
+		scanf("%c", &origen);
+	}
 
   aux[1] = '\0';
   aux[0] = origen;
@@ -309,8 +358,12 @@ if(opcion == 3){
 	printf("%s-", aux); scanf("%s", new_rif); 
 	int digits = extension(new_rif);
 	caracteresEspeciales(new_rif);
-
-    modify_rif(archivo, reemplazo, aux, new_rif, fila);	// Funcion para cambiar el rif
+	while(modify_rif(archivo, reemplazo, aux, new_rif, fila) == -1){	// Funcion para cambiar el rif
+		printf("Rif invalido para ser cambiado\n");
+		printf("Vuelva a ingresar tu rif\n");	
+		printf("%s-", aux);	scanf("%s", new_rif);
+		system("cls");
+	}
     break;
 	}		
 
@@ -370,23 +423,12 @@ void empresa(FILE *archivo){	// Datos de la empresa x2
 
 }	
 
-void fecha(FILE *archivo){	// Horario local 
-    time_t fecha = time(NULL);
-    struct tm tm = *localtime(&fecha);
-
-	fprintf(archivo, "%.2d-%.2d-%.4d\t", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
-	fflush(stdin);
-	system("cls");
-}
-
 int admit_rif(char nationality[], char str[]){	// Determina si es valido o no el rif
 	 	int digits;
 	 	caracteresEspeciales(str);
 	 	digits = extension(str);
 	 	if(digits == 9 && caracteresEspeciales(str) == false){
 	 		return 0;
-	 	}	else 	{
-	 		return -1;
 	 	}
 	 	return -1;
 }
@@ -396,58 +438,67 @@ void no_repeat(FILE *archivo, char rif[]){	// No permitira que se repita el mism
 	archivo = fopen("facturas.txt", "r");
 
 	if(archivo == NULL){
-		printf("Error al abrir el archivo\n");
+		printf("Error al abrir el archivo... (no_repeat)\n");
 	}
 
 	int fila = search_data_file(archivo, 3, rif);
   	read_col_file(archivo, fila, 3, cont);
 
   if(!strcmp(cont, rif)){
-    printf("El rif ya esta registrado\n");
-   	exit(1);
+  	exit(1);
   }  
   fclose(archivo);
 }
 
-void factura_user(FILE *archivo, int code, char name[], char city[], char rif[]){	// Funcion con los datos del usuario
+void factura_user(FILE *archivo, int code, char name[], char city[], char rif[], float total){	// Funcion con los datos del usuario
+	time_t a;
+    struct tm *fecha;
+    char date[15];
+    time(&a);
+
 	char cont[200];
 	char aux[10];
-										//
-	snprintf(aux, 5, "%.4d", code);		//
-										//
-	strcpy(cont, aux);					// Pensar a fondo si implementar el monto total del producto y la fecha tambien
-	strcat(cont, "\t");					//
-	strcat(cont, name);					//
-	strcat(cont, "\t");					//
+	char total_price[10];
+
+	fecha = localtime(&a);	
+										
+	snprintf(aux, 5, "%.4d", code);		
+	strftime(date, 14, "%d-%m-%Y", fecha);	
+	snprintf(total_price, 10, "%.2f", total);
+
+	strcpy(cont, aux);					
+	strcat(cont, "\t");					
+	strcat(cont, name);					
+	strcat(cont, "\t");					
 	strcat(cont, city);
 	strcat(cont, "\t");
 	strcat(cont, rif);
 	strcat(cont, "\t");
+	strcat(cont, date);
+	strcat(cont, "\t");
+	strcat(cont, total_price);
 
 	add_line_file(archivo, cont);
 
 }
 
-char unit_str(char str[]){	// Convierte los espacios en '_' y pondra Undefined si el usuario le da enter de una
+char unit_str(char str[]){	// Convierte los espacios en '_' y evita que el usuario sobrepase los caracteres permitidos
 	int j;
+	int i = 0;
  	for (j = 0; str[j] != '\0'; j++) {
+ 		i++;
     	if (str[j] == ' ') str[j] = '_';
+    	if(i >= RANGO){
+    		return -1;
+    	}
     }
 
 	return str[j];
 }
 
 
-char naturaleza(){	// Naturaleza de la persona 
-	char opcion;
+char naturaleza(char opcion){	// Naturaleza de la persona 
 	char nat;
-	printf("Presione usando las mayusculas su opcion\n"); // 01:46am.... Despues pensare en como admitir minusculas xd
-	printf("Eres una persona natural, teclea <V>\n");
-	printf("Eres una persona natural extranjera, teclea <E>\n");
-	printf("Eres una persona natural extranjera sin cedula, teclea <P>\n");
-	printf("Eres un ente gubernamental, teclea <G>\n");
-	printf("Eres un contribuyente juridico, teclea <J>\n");
-	scanf("%c", &opcion);
 	switch(opcion){
 		case 86:
 			return nat = *"V";
@@ -466,30 +517,9 @@ char naturaleza(){	// Naturaleza de la persona
 		break;
 
 		default:
-			printf("Opcion no valida \n");
-			fflush(stdin);
-			return naturaleza();
+			return -1;
+			break;
 	}
-}
-
-
-void ampliar(FILE *archivo, int fila){	// De aqui saldra la forma ampliada que visualizaras de la factura
-	char id[10], name[30], city[30], rif[12], date[20], total[20]; 
-	read_col_file(archivo, fila, 0, id);
-	read_col_file(archivo, fila, 1, name);
-	read_col_file(archivo, fila, 2, city);
-	read_col_file(archivo, fila, 3, rif);
-	read_col_file(archivo, fila, 4, date);
-	read_col_file(archivo, fila, 5, total);
-	printf("--Datos de la empresa---\n");
-	empresa(archivo);   
-	printf("--Factura---\n");			
-	printf("ID: %s\n", id);
-	printf("Name: %s\n", name);
-	printf("City: %s\n", city);
-	printf("Rif: %s\n", rif);
-	printf("Date: %s\n", date);
-	printf("Total: %s\n", total);
 }
 
 
@@ -503,6 +533,11 @@ int extension(char str[]){	// Devulve el numero de caracteres de una cadena (str
 }
 
 // Funciones para modificar las facturas
+/*
+	******************************************************************
+	 Modificar estas funciones haciendo uso de las funciones de tabdb.
+	****************************************************************** 
+*/
 
 void modify_name(FILE *archivo, FILE *reemplazo, char new_name[], int i){
 
@@ -552,7 +587,7 @@ void modify_city(FILE *archivo, FILE *reemplazo, char new_domicilio[], int fila)
       }
 }
 
-void modify_rif(FILE *archivo, FILE *reemplazo, char aux[] , char new_rif[], int i){
+char modify_rif(FILE *archivo, FILE *reemplazo, char aux[] , char new_rif[], int i){
   
     int code; 
     char str[30];
@@ -567,40 +602,26 @@ void modify_rif(FILE *archivo, FILE *reemplazo, char aux[] , char new_rif[], int
   	int digits = extension(new_rif);
  	caracteresEspeciales(new_rif);
 
-	while(valor == false){
-		valor = false;			
-		printf("Nota: Solamente se admiten numeros\n");
-		printf("Dame el numero de tu rif: \n" ); 	
-		fflush(stdin);
-	 	printf("%s-", aux);  scanf("%s", new_rif);
-	 	caracteresEspeciales(new_rif);
-	 	digits = extension(new_rif);
 	 	if(digits == 9 && caracteresEspeciales(new_rif) == false){
-	 		valor = true;
-	 	}	else 	{
-	 		valor = false;
-	 	}
-	 	printf("Rif invalido introduzcalo nuevamente\n");
-	 	getchar();
-	 	system("cls");
-	}	
+	 		strcpy(fusion, aux);
+			strcat(fusion, new_rif); 
 
-	strcpy(fusion, aux);
-	strcat(fusion, new_rif); 
+			no_repeat(archivo, fusion);  // Pensar una mejor forma que aventar al usuario fuera del programa XD
+    		linea = 0;
 
-	no_repeat(archivo, fusion);  // Pensar una mejor forma que aventar al usuario fuera del programa XD
-    linea = 0;
-
-        while (!feof(archivo))
-        {
-        linea++;
-        fscanf(archivo, "%d %s %s %s %s %f\n", &code, str, str_aux, rif_num, date, &foat);
-            if (linea == i)              
-			fprintf(reemplazo, "%.4d\t%s\t%s\t%s\t%s\t%.2f\n", code, str, str_aux, fusion, date, foat); 
-
-            else   
-			fprintf(reemplazo, "%.4d\t%s\t%s\t%s\t%s\t%.2f\n", code, str, str_aux, rif_num, date, foat);
-        } 
+        		while (!feof(archivo))
+        		{
+        		linea++;
+        		fscanf(archivo, "%d %s %s %s %s %f\n", &code, str, str_aux, rif_num, date, &foat);
+        		    if (linea == i)              
+					fprintf(reemplazo, "%.4d\t%s\t%s\t%s\t%s\t%.2f\n", code, str, str_aux, fusion, date, foat); 
+		
+        		    else   
+					fprintf(reemplazo, "%.4d\t%s\t%s\t%s\t%s\t%.2f\n", code, str, str_aux, rif_num, date, foat);
+        		} 
+        		return 0;
+	 		}
+	return -1;	
 }
 
 void modify_mount(FILE *archivo, FILE *reemplazo, float new_total, int i){

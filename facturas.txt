@@ -3,4 +3,5 @@
 0003	Simon_Bolivar	Los_Olivos	P123456784	29-08-2022	5.99
 0004	Harry_Osborn	Ciudad_de_Italia	G123456789	25-08-2022	1999.99
 0005	Estan_dando_el	Venezuela	E123456789	29-08-2022	11.98
-0006	Andres_Manuel	CIudad_de_Mexico	E123456736	29-08-2022	14.99
+0006	Andres_Manuel	CIudad_de_Mexico	E123456783	29-08-2022	14.99
+0007	Sebastian	Trinidad_y_Tobago	G123456723	02-09-2022	1.33
