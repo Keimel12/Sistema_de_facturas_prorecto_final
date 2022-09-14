@@ -10,7 +10,7 @@
   
 0004	Alexandro	Magno	G123456789	12-09-2022	99.99$
   
-0005	Undefined	Undefined	E123456789	09-09-2022	10.00$
+0005	Sigma	Undefined	E123456789	09-09-2022	10.00$
   
 0006	Undefined	Undefined	P123321123	12-09-2022	19.99$
   
@@ -29,4 +29,8 @@
 0013	Undefined	Undefined	V123412341	09-09-2022	91.50$
   
 0014	Jordi Wild	Undefined	P123443211	12-09-2022	77.77$
-
+  
+0015	Emiya	Undefined	E123456123	01-01-2006	10.00$
+  
+0016	Zero	Undefined	V123478904	14-09-2022	87.99$
+ 
