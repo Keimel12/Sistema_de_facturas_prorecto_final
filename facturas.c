@@ -8,7 +8,7 @@
 #include "caracteres.h"
 #define MAX 100
 #define RANGO 32
-#define ESC 27
+#define ESC 27	// Codigo ASCII que hace referencia a la tecla ESC en el teclado
 
 void empresa();	// Muestra los datos de la empresa	
 void factura_user(FILE *archivo, char code[], char name[], char city[], char rif[], char total[]);	//	Muestra en pantalla todos los elementos de la factura (falta productos)
@@ -19,27 +19,32 @@ char naturaleza(char opcion);	// Devuelve la naturaleza de la persona
 int admit_rif(char nationality[], char str[]);	//	Establece si un rif es admitido o no es valido
 int extension(char str[]);	// Calcula la cantidad de caracteres de una cadena de palabras
 int ubication_code(FILE *archivo, char str[]);	//	Busca la aparicion del elemento tecleado
+int admit_naturaleza(char chr);	// Leera la inicial del char y determinara si es valido o no	
+
+bool solo_number(char *str);	// Leera el rif (sin contar la naturaleza) y permitira continuar si solo hay numeros
 
 // Funciones nacidas de tabdb
-int isBlank_invoice(int i);
-int gets_lines_invoice();
-int gets_jumplines_invoice();
+int isBlank_invoice(int i);	// Revisa si en el fichero de "facturas.txt" hay lineas en blanco o no
+int gets_lines_invoice();	// Devuelve el total de saltos de lineas (excepto los dos ultimos) del fichero "facturas.txt"
+int gets_jumplines_invoice();	// Devuelve la cantidad de lineas con contenido en el fichero "facturas.txt"
 
-char read_code_invoice(int i, char *str);
-char read_name_invoice(int i, char *str);
-char read_city_invoice(int i, char *str);
-char read_rif_invoice(int i, char *str);
-char read_date_invoice(int i, char *str);
-char read_price_invoice(int i, char *str);
+char read_ID_invoice(int i, char *str);	// Lee en la fila X el ID de la factura
+char read_code_invoice(int i, char *str);	// Lee en la fila X el codigo de la factura
+char read_name_invoice(int i, char *str);	// Lee en la fila X el nombre en la factura
+char read_city_invoice(int i, char *str);	// Lee en la fila X la ciudad en la factura
+char read_rif_invoice(int i, char *str);	// Lee en la fila X el rif en la factura
+char read_date_invoice(int i, char *str);	// Lee en la fila X la fecha en la factura
+char read_price_invoice(int i, char *str);	// Lee en la fila X el precio en la factura
 
 struct STRUCTINVOICEDATA // Struct con los datos del usuario
 {
-	char code[5];	// Aqui obtendra el codigo unico de la factura
-	char nombre[RANGO];
-	char domicilio[RANGO];
-	char rif[12];
-	char date[12];
-	char price[8];
+	char ID[16];	// Se almacenara el ID unico de la factura
+	char code[5];	//	Se almacenara numero de la factura
+	char nombre[RANGO];	// Se almacenara el nombre del usuario
+	char domicilio[RANGO];	// Se almacenara el domicilio del usuario
+	char rif[12];	// Se almacenara el rif del usuario
+	char date[12];	// Se almacenara la fecha de actual de crearse la factura
+	char price[8];	// Se almacenara el precio total de los productos
 } ;
 
 struct data		//Vamos a tener todo lo refetente a un producto ordenado en esta struct 
@@ -50,15 +55,15 @@ struct data		//Vamos a tener todo lo refetente a un producto ordenado en esta st
 	float price;
 } product;
 
-typedef struct STRUCTINVOICEDATA STRUCTINVOICEDATA;
+typedef struct STRUCTINVOICEDATA STRUCTINVOICEDATA;	
 
 void sort_date_invoice(struct STRUCTINVOICEDATA *DATOS, int i);	// Metodo para ordenar las facturas segun la fecha
-void sort_code_invoice(struct STRUCTINVOICEDATA *DATOS, int i);	// Metodod para ordenar las factura segun el codigo
+void sort_code_invoice(struct STRUCTINVOICEDATA *DATOS, int i);	// Metodo para ordenar las factura segun el codigo
 
 int main()	
 {
-	FILE *archivo;
-	int linea = 0;
+	FILE *archivo;	// Nombre del fichero en donde se ejecutara las operaciones
+	int linea = 0;	// Almacenara el total de lineas que no este en blanco en el fochero "facturas.txt"
 	int fila;	// Almacenara la fila exacta
 
 	struct STRUCTINVOICEDATA datos;
@@ -68,15 +73,15 @@ int main()
 	char origen; // Obtendra la naturaleza de la persona... V, E, P, J, G
 	char fusion[20];	// Concatenara el origen junto al rif para tener un solo string
 
-	int i;
-	int opcion;
-	int x;
+	int i;	// Sera usado como un contador
+	int opcion;	// Segun el numero que teclees, esta variable hara una cosa o otra
+	int x;	// Sera un contador al momento de recopilar el array de struct
+
 	while(opcion != ESC){	// Mientras no presione Esc el programa seguira
 	printf("1) Crear facturas\n");
 	printf("2) Reporte de Facturas\n");	
 	printf("3) Eliminar Factura\n");
-	printf("4) Modificar factura\n");
-	printf("0) Borrar el historial de facturas\n");	// Era 5 pero mas de una vez borre el hostorial sin querer :/
+	printf("0) Borrar el historial de facturas\n");
 	printf("Presione la tecla Esc para salir\n");
 	opcion = getch();
 	fflush(stdin);
@@ -88,15 +93,15 @@ int main()
 			
 			linea = gets_jumplines_invoice();
 
-			char ID[5];
+			char code_number[5];	// Sera el numero de factura
 
-			sprintf(ID, "%.4d", linea);
+			sprintf(code_number, "%.4d", linea);	// Convertimos el valor entero a un string
 
 			printf("Dime tu nombre: \n"); fgets(datos.nombre, RANGO, stdin);
 			datos.nombre[strcspn(datos.nombre, "\n")] = 0;	// Esto evitara el salto de linea de los fgets
 			fflush(stdin);
 		
-			if(datos.nombre[0] == 0){	
+			if(datos.nombre[0] == 0){ 	//	Puede ser cambiado por NULL
 				strcpy(datos.nombre, "Undefined");
 			}	
 
@@ -108,53 +113,6 @@ int main()
 				strcpy(datos.domicilio, "Undefined");
 			}
 
-			system("cls");
-			printf("Presione usando las mayusculas su opcion\n"); 
-			printf("Eres una persona natural, teclea <V>\n");
-			printf("Eres una persona natural extranjera, teclea <E>\n");
-			printf("Eres una persona natural extranjera sin cedula, teclea <P>\n");
-			printf("Eres un ente gubernamental, teclea <G>\n");
-			printf("Eres un contribuyente juridico, teclea <J>\n");
-			scanf("%c", &origen);
-
-			while(naturaleza(origen) == -1)
-			{
-				printf("Caracter invalido\n");
-				scanf("%c", &origen);
-			}
-
-			aux[1] = '\0';
-			aux[0] = origen;
-
-    		bool valor = false;	
-			int digits;
-
-			printf("Nota: Solamente se admiten numeros\n");
-			printf("Dame el numero de tu rif: \n" ); 	
-			fflush(stdin);	 	
-	 		printf("%s-", aux);  scanf("%s", &datos.rif);
-
-	 		strcpy(fusion, aux);
-			strcat(fusion, datos.rif);
-
-			while(admit_rif(aux, datos.rif) == -1 || no_repeat(archivo, fusion) == -1)
-			{	
-	 			system("cls");
-	 			printf("Rif invalido, pon uno correcto\n");
-	 			printf("%s-", aux);  scanf("%s", &datos.rif);
-	 			strcpy(fusion, aux);
-				strcat(fusion, datos.rif);
-				if (no_repeat(archivo, fusion) == -1)
-				{
-					printf("Rif ya registrado\n");
-					getchar();
-					printf("Presione Enter para seguir\n");
-					getchar();
-				}
-				printf("%s\n", fusion);
-				system("cls");
-			}	
-
 			int amount, i;
 			int cantidad;
 			float total = 0;
@@ -163,7 +121,7 @@ int main()
 
 			fflush(stdin);		
 
-			for(i = 0; i < amount; i++)
+			for(i = 0; i < amount; i++)	
 			{
 				printf("Dime el producto: \n"); fgets(product.item, sizeof(product.item), stdin);	
 
@@ -173,10 +131,11 @@ int main()
 
 				total += product.price;	// El total a pagar 
 			}	
-			// Establecer un limite del total de precio
-			char price_total[8];
-			sprintf(price_total, "%.2f", total);		
-			factura_user(archivo, ID, datos.nombre, datos.domicilio, fusion, price_total);
+
+			char price_total[8];	// Almacenara el total en formato string
+			sprintf(price_total, "%.2f", total);	// Convertimos el total en un string
+			//	Mandamos el codigo de la factura(code_number), el nombre del usuario, domicilio, rif(fusion), y el precio total a una funcion para mostrar la factura
+			factura_user(archivo, code_number, datos.nombre, datos.domicilio, fusion, price_total);
 	
 			fclose(archivo);
 				break;
@@ -188,26 +147,27 @@ int main()
 				printf("Error al abrir el archivo\n");
 			}
 
-			char rp[200];
+			char rp[200];	// Almacenara lo escrito en una fila
 			char code_2[5];	// Mostrara la factura que concuerde con el codigo unico tecleado
-			char s;
-			int x = 0;
-			i = 0;
-			int lines, limit;
+			char s;	//	Se usara para decidir su quiere ver la factura ampliada
+			int x = 0;	// Es un contador para acceder al struct array y almacenar los datos
+			i = 0;	// Es un contador
+			int lines, limit;	
 			
-			lines = gets_lines_invoice();
-			limit = gets_jumplines_invoice();
+			lines = gets_lines_invoice();	// Nos da la cantidad de saltos de linea, excepto los dos ultimos	
+			limit = gets_jumplines_invoice();	// Nos da la cantidad de lineas que no esten en blanco
 
-			struct STRUCTINVOICEDATA DATOS[100];
+			struct STRUCTINVOICEDATA DATOS[100];	// Convertimos nuestro struct en un array de struct para almacenar en el registro los diversos campos
 			printf("Para ver todas las facturas... Teclee <1>\n");
 			printf("Para las facturas segun su codigo unico... Teclee <2>\n");
 			printf("Para visualizar las facturas por orden de fecha... Teclee <3>\n");
 			scanf("%d", &opcion);
 
-			while(i <= lines)
+			while(i <= lines)	
 			{
-				if(!isBlank_invoice(i))
-				{
+				if(!isBlank_invoice(i))	// Funcion para leer solo las lineas con contenido
+				{	
+					read_ID_invoice(i, DATOS[x].ID);
 					read_code_invoice(i, DATOS[x].code);
 					read_name_invoice(i, DATOS[x].nombre);
 					read_city_invoice(i, DATOS[x].domicilio);
@@ -221,11 +181,11 @@ int main()
 
 			switch(opcion)
 			{	
-				case 1:	
+				case 1:	// Nos muestra el total de facturas ordenados segun su codigo
 					sort_code_invoice(DATOS, limit);
 					for (int j = 1; j <= limit; j++)
 					{
-						printf("%s\t%s\t%s\t%s\t%s\t%s\n", DATOS[j].code, DATOS[j].nombre, DATOS[j].domicilio, DATOS[j].rif, DATOS[j].date, DATOS[j].price);
+						printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", DATOS[j].ID, DATOS[j].code, DATOS[j].nombre, DATOS[j].domicilio, DATOS[j].rif, DATOS[j].date, DATOS[j].price);
 					}
 					getchar();
 					getchar();
@@ -239,12 +199,22 @@ int main()
 						break;
 					}
 
-					fila = ubication_code(archivo, code_2);
-					read_line_file(archivo, fila, rp);	
+					fila = ubication_code(archivo, code_2);	// Buscara la fila que tenga el mismo texto que code_2 y al encontrarlo devuelve su posicion
+					
+					if(fila == -1)	// En caso de no hallar coincidencia nos devolvemos al menu
+					{
+						printf("No existe esta factura\n");
+						getchar();
+						getchar();
+						fclose(archivo);
+						break;
+					}
+
+					read_line_file(archivo, fila, rp);	// Almacena el contenido de la fila en rp
 		
 					system("cls");
 
-					printf("%s\n", rp);
+					printf("%s\n", rp);	// Demostramos al usuario una fila con los datos
 
 					printf("Desea ver la factura ampliada?\n");
 					printf("Presione <S> para Si\n");
@@ -252,21 +222,22 @@ int main()
 
 					printf("Escoja una opcion\n");
 					fflush(stdin);
-					scanf("%c", &s);
+					scanf("%c", &s);	// En caso de ver los datos ampliados puede teclear s o S
 						if(s == 's' || s == 'S')
 						{
-							char id[10], name[30], city[30], rif[12], date[20], total[20]; 
-			
-							read_col_file(archivo, fila, 0, id);
-							read_col_file(archivo, fila, 1, name);
-							read_col_file(archivo, fila, 2, city);
-							read_col_file(archivo, fila, 3, rif);
-							read_col_file(archivo, fila, 4, date);
-							read_col_file(archivo, fila, 5, total);
+							char id1[16], code1[10], name[30], city[30], rif[12], date[20], total[20]; 	
+							read_col_file(archivo, fila, 0, id1);	
+							read_col_file(archivo, fila, 1, code1);
+							read_col_file(archivo, fila, 2, name);
+							read_col_file(archivo, fila, 3, city);
+							read_col_file(archivo, fila, 4, rif);
+							read_col_file(archivo, fila, 5, date);
+							read_col_file(archivo, fila, 6, total);
 							printf("--Datos de la empresa---\n");
 							empresa(archivo);   
-							printf("--Factura---\n");			
-							printf("ID: %s\n", id);
+							printf("--Factura---\n");
+							printf("ID: %s\n", id1);			
+							printf("Codigo: %s\n", code1);
 							printf("Name: %s\n", name);
 							printf("City: %s\n", city);
 							printf("Rif: %s\n", rif);
@@ -275,13 +246,13 @@ int main()
 			
 							getchar();
 							getchar();
-						} 	
+						} 	// En caso de no teclear s o S se ejecutara el break;
 					break;
-				case 3: 
-					sort_date_invoice(DATOS, limit);
-					for(i = 1; i <= limit; i++)
+				case 3: 	//	Mostrara las facturas ordenadas por fecha (de menor a mayor)
+					sort_date_invoice(DATOS, limit);	// Esta funcion se encargara de ordenar las facturas por fecha
+					for(i = 0; i <= limit; i++)
 					{
-						printf("%s\t%s\t%s\t%s\t%s\t%s\n", DATOS[i].code, DATOS[i].nombre, DATOS[i].domicilio, DATOS[i].rif, DATOS[i].date, DATOS[i].price);
+						printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", DATOS[i].ID,DATOS[i].code, DATOS[i].nombre, DATOS[i].domicilio, DATOS[i].rif, DATOS[i].date, DATOS[i].price);
 					}
 
 					getchar();
@@ -297,188 +268,28 @@ int main()
 				printf("Error al abrir el archivo\n");
 			}
 
-			printf("Dime la el codigo unico de la factura a eliminar\n");
+			printf("Dime el codigo unico de la factura a eliminar\n");
 			scanf("%s", code_2);
-			fila = search_data_file(archivo, 0, code_2);
-
-			while((fila = search_data_file(archivo, 0, code_2)) == -1)
+			fila = ubication_code(archivo, code_2);	// Buscara la fila cuya coincidencia sea igual que lo escrito en code_2
+			
+			while((fila = search_data_file(archivo, 1, code_2)) == -1)	// Si nos devuelve -1 entramos en un ciclo hasta hallarla
 			{
 				printf("No existe esta factura, ingrese una factura correcta:\n");
 				scanf("%s", code_2);
 				fila = ubication_code(archivo, code_2);
 			}
 
+			if(fila != -1)	// Si nos devuelve un valor distinto a -1 se procede a eliminar la factura
+			{
+				printf("Factura encontrada y eliminala\n");
+				getch()
+			}
+
 			delete_line_file(archivo, fila);
 			fclose(archivo);
 			break;
-
-		case 52: 	// MODIFICACION DE FACTURAS
-			archivo = fopen("facturas.txt", "r+");
-		
-			if(archivo == NULL){
-				printf("Error al abrir el archivo\n");
-			}
-
-			char fact[5];
-			int col = 0;
-			printf("Que factura desea modificar?\n");
-			scanf("%s", &fact);	
-			fila = ubication_code(archivo, fact);
-			// Creamos esta funcion para obtener la fila exacta en donde esta el code de la fila...								
-			// Obviamos la posibilidad de usar el search_data_file en la fila 240 por que retorna un -1 y borra todo el fichero txt.
-
-			if(fila == -1)	// En caso de no existir la factura regresaremos al menu
-			{
-				printf("No existe dicha factura\n");
-				getchar();
-				getchar();
-				fclose(archivo);
-				break;
-			}
-			
-
-				while(opcion != 5)
-				{
-					printf("Que desea modificar de la factura?\n");
-					printf("Teclee <1> para cambiar el nombre\n");
-					printf("Teclee <2> para cambiar el domicilio\n");
-					printf("Teclee <3> para cambiar el rif\n");
-					printf("Teclee <4> para cambiar el total a pagar\n");	
-					printf("Teclee <5> para salir\n");	
-					scanf("%d", &opcion);		
-					fflush(stdin);		
-					system("cls");
- 
- 						if(opcion == 1)	// Modificacion del nombre del usuario en la factura
- 						{
-    						char new_name[RANGO];
-    						col = 1;
-
-    						printf("Nuevo nombre del usuario: \n");
-    						fgets(new_name, RANGO, stdin);
-    						fflush(stdin); 
-
-    						if(new_name[0] == 0){	// Puede ser cambiada por NULL	
-								strcpy(new_name, "Undefined");
-							}
-
-							system("cls");
-	
-							new_name[strlen(new_name) - 1] = '\0';
-							fprintf(archivo, "\n ");
-							modify_col_file(archivo, fila, col, new_name);
-    						break;
-  						}
-
-						if(opcion == 2)	// Modificacion del domicilio del usuario en la factura
-						{
-    						char new_domicilio[RANGO];
-    						col = 2;
-
-    						printf("Nuevo domicilio del usuario: \n");	
-    						fgets(new_domicilio, sizeof(new_domicilio), stdin);
-							fflush(stdin); 
-								if(new_domicilio[0] == 0){ // Puede ser cambiada por NULL 	
-									strcpy(new_domicilio, "Undefined");
-								}
-							system("cls");
-
-							new_domicilio[strlen(new_domicilio) - 1] = '\0';
-							fprintf(archivo, "\n ");	
-							modify_col_file(archivo, fila, col, new_domicilio);   
-    						break;
-						} 
-
-						if(opcion == 3)	// Modificacion del rif del usuario en la factura
-						{
-							char fusion[15];
-  							char new_rif[10];
-  							col = 3;
-
-  							system("cls");
-							printf("Presione usando las mayusculas su opcion\n"); 
-							printf("Eres una persona natural, teclea <V>\n");
-							printf("Eres una persona natural extranjera, teclea <E>\n");
-							printf("Eres una persona natural extranjera sin cedula, teclea <P>\n");
-							printf("Eres un ente gubernamental, teclea <G>\n");
-							printf("Eres un contribuyente juridico, teclea <J>\n");
-							scanf("%c", &origen);
-
-  							naturaleza(origen);
-
-  							while(naturaleza(origen) == -1)
-  							{
-								printf("Caracter invalido\n");
-								scanf("%c", &origen);
-							}
-
-  							aux[1] = '\0';
-  							aux[0] = origen;
-
-  							printf("Nuevo rif del usuario: \n");	
-
-							printf("%s-", aux); scanf("%s", new_rif); 
-							int digits = extension(new_rif);
-							caracteresEspeciales(new_rif);
-
-							while(admit_rif(aux, new_rif) == -1 || no_repeat(archivo, fusion) == -1)
-							{	
-					 			system("cls");
-					 			printf("Rif invalido, pon uno correcto\n");
-					 			printf("%s-", aux);  scanf("%s", &new_rif);
-					 			strcpy(fusion, aux);
-								strcat(fusion, new_rif);
-								if (no_repeat(archivo, fusion) == -1)
-								{
-									printf("Rif ya registrado\n");
-									getchar();
-									printf("Presione Enter para seguir\n");
-									getchar();
-								}
-								printf("%s\n", fusion);
-								system("cls");
-							}
-
-							strcpy(fusion, aux);
-							strcat(fusion, new_rif);
-
-    						modify_col_file(archivo, fila, col, fusion);
-    						break;
-						}		
-
-						if(opcion == 4)	// Modificacion del total a pagar del usuario en la factura
-						{
-    						float new_total;
-    						char total_price[8];
-    						col = 5;
-
-    						printf("Nuevo total a pagar: \n");
-    						scanf("%f", &new_total);
-
-    						if(new_total <= 0){
-    							printf("Total invalido, ungrese un total correcto\n");
-  	  							scanf("%f", &new_total);
-    						}
-
-    						sprintf(total_price, "%.2f", new_total);
-    						strcat(total_price, "$");
- 
-    						modify_col_file(archivo, fila, col, total_price);
-
-    						break;
-						}
-
-						if(opcion == 5)
-						{ 
-							break;
-						}
-    					system("cls");
-				}
-
-				fclose(archivo);	
-				break;
 				
-		case 48:
+		case 48:	// En caso de tener privligios de admin, aparecera esta opcion
 			archivo = fopen("facturas.txt", "w");
 			fprintf(archivo, "\n  \n");
 			printf("El historial ha sido borrado\n");
@@ -499,7 +310,7 @@ int main()
 	return 0;
 }
 
-//	Funciones tipo void
+//	Funciones  de tipo void
 
 void empresa(FILE *fp)	// Datos de la empresa 
 {	
@@ -537,19 +348,25 @@ char no_repeat(FILE *fp, char rif[])	// No permitira que se repita el mismo rif
 
 void factura_user(FILE *fp, char code[], char name[], char city[], char rif[], char total[])	// Funcion con los datos del usuario
 {		
+
+	char ID[20];
 	time_t a;
     struct tm *fecha;
     char date[15];
     time(&a);
 
-	char cont[200];
+	char cont[200]; // Almacenara el total de caracteres de los campos de la factura
 
 	fecha = localtime(&a);	
-									
-	strftime(date, 14, "%d-%m-%Y", fecha);	
+	
+	create_ID(ID);	// Creamos el ID de la factura
 
-	strcpy(cont, code);					
-	strcat(cont, "\t");					
+	strftime(date, 14, "%d-%m-%Y", fecha);	// Convertimos la fecha en un string
+
+	strcpy(cont, ID);
+	strcat(cont, "\t");
+	strcat(cont, code);
+	strcat(cont, "\t");				
 	strcat(cont, name);					
 	strcat(cont, "\t");					
 	strcat(cont, city);
@@ -559,11 +376,11 @@ void factura_user(FILE *fp, char code[], char name[], char city[], char rif[], c
 	strcat(cont, date);
 	strcat(cont, "\t");
 	strcat(cont, total);
-	strcat(cont, "$\n ");
+	strcat(cont, "$");
 	add_line_file(fp, cont);
 }
 
-void sort_code_invoice(struct STRUCTINVOICEDATA *DATOS, int p)
+void sort_code_invoice(struct STRUCTINVOICEDATA *DATOS, int p)	// Ordenara mediante el uso del metodo burbuja los codigos de las facturas
 {
 	char ID[5];
 	char ID2[5];
@@ -593,7 +410,7 @@ void sort_code_invoice(struct STRUCTINVOICEDATA *DATOS, int p)
 	}
 }
 
-void sort_date_invoice(struct STRUCTINVOICEDATA *DATOS, int p)
+void sort_date_invoice(struct STRUCTINVOICEDATA *DATOS, int p)	// Ordenara usando el metodo burbuja las fecha en orden descendente de las facturas
 {
 	char date1[11], date2[11];
 	char year1[5], year2[5];
@@ -602,7 +419,7 @@ void sort_date_invoice(struct STRUCTINVOICEDATA *DATOS, int p)
 
 	STRUCTINVOICEDATA temp;
 
-    for (int i = 1; i <= p; i++)
+    for (int i = 0; i <= p; i++)
     {
         for (int j = 1; j <= p - i; j++)
         {  
@@ -650,7 +467,7 @@ void sort_date_invoice(struct STRUCTINVOICEDATA *DATOS, int p)
 
 
 
-//	Funciones tipo char
+//	Funciones de tipo char
 
 char naturaleza(char opcion)	// Naturaleza de la persona 
 {	
@@ -658,19 +475,19 @@ char naturaleza(char opcion)	// Naturaleza de la persona
 	switch(opcion)
 	{
 		case 86:
-			return nat = *"V";
+			return nat = 'V';
 		break;
 		case 69:
-			return nat = *"E";
+			return nat = 'E';
 		break;
 		case 80:
-			return nat = *"P";
+			return nat = 'P';
 		break;
 		case 71:
-			return nat = *"G";
+			return nat = 'G';
 		break;
 		case 74:
-			return nat = *"J";
+			return nat = 'J';
 		break;
 
 		default:
@@ -680,14 +497,14 @@ char naturaleza(char opcion)	// Naturaleza de la persona
 	}
 }
 
-// Funciones tipo int
+// Funciones de tipo int
 
 int admit_rif(char nationality[], char str[])	// Determina si es valido o no el rif
 {	
 	int digits;
-	caracteresEspeciales(str);
+	solo_number(str);
 	digits = extension(str);
-	if(digits == 9 && caracteresEspeciales(str) == false)
+	if(digits == 9 && solo_number(str) == false)
 	{
 		return 0;
 	}
@@ -708,14 +525,53 @@ int ubication_code(FILE *fp, char str[])	//	Aparicion del string
 {	
 	int fila;
 	fp = fopen("facturas.txt","r");
-	fila = search_data_file(fp, 0, str);
+	fila = search_data_file(fp, 1, str);
 	fclose(fp);
 	return fila;
 }
 
+int admit_naturaleza(char chr)	// Determinara si la naturaleza de la persona es correcta
+{
+
+	if(chr == 'V' || chr == 'E' || chr == 'G' || chr == 'J')
+	{
+		return 1;
+	}
+	return 0;
+}
+
+// Funciones de tipo bool
+
+bool solo_number(char *str)	// Determinara que los numeros del rif no sean letras
+{
+	int length = lenghtStr(str);
+
+   	char caracteresPermitidos[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '\0'};
+
+   	int length2 = lenghtStr(caracteresPermitidos);
+
+    for (size_t i = 0; i < length; i++)
+    {
+       	bool isValid = false;
+            for (size_t x = 0; x < length2; x++)
+            {
+                if (str[i] == caracteresPermitidos[x])
+                {
+                   	isValid = true;
+                }	
+           }
+       	
+       	if (isValid == false)
+        {
+      		return true;
+        }
+   	}
+    return false;
+}
+
 // Funciones similares pertenecientes de tabdb
 
-int isBlank_invoice(int i)	
+int isBlank_invoice(int i)	// 
 {
 	FILE *fp;
 	fp = fopen("facturas.txt", "r+");
@@ -759,6 +615,20 @@ int gets_jumplines_invoice()
 	return lines;
 }
 
+char read_ID_invoice(int i, char *str)	//	Devuelve el id de la facturas
+{
+	FILE *fp;
+	fp = fopen("facturas.txt", "r+");
+
+	if(fp == NULL){
+		return -1;
+	}
+
+	read_col_file(fp, i, 0, str);
+
+	fclose(fp);
+}
+
 char read_code_invoice(int i, char *str)	// Devuelve el codigo unico de la factura
 {	
 	FILE *fp;
@@ -768,7 +638,7 @@ char read_code_invoice(int i, char *str)	// Devuelve el codigo unico de la factu
 		return -1;
 	}
 
-	read_col_file(fp, i, 0, str);
+	read_col_file(fp, i, 1, str);
 
 	fclose(fp);
 }
@@ -783,7 +653,7 @@ char read_name_invoice(int i, char *str)	// Devuelve el nombre escrito de la fac
 		return -1;
 	}
 
-	read_col_file(fp, i, 1, str);
+	read_col_file(fp, i, 2, str);
 
 	fclose(fp);
 }
@@ -798,7 +668,7 @@ char read_city_invoice(int i, char *str)	// Devuelve el domicilio escrito en la 
 		return -1;
 	}
 
-	read_col_file(fp, i, 2, str);
+	read_col_file(fp, i, 3, str);
 
 	fclose(fp);
 }
@@ -813,7 +683,7 @@ char read_rif_invoice(int i, char *str)	// Devuelve el rif de la factura
 		return -1;
 	}
 
-	read_col_file(fp, i, 3, str);
+	read_col_file(fp, i, 4, str);
 
 	fclose(fp);
 }
@@ -828,7 +698,7 @@ char read_date_invoice(int i, char *str)	// Devuelve la fecha de impresion de la
 		return -1;
 	}
 
-	read_col_file(fp, i, 4, str);
+	read_col_file(fp, i, 5, str);
 
 	fclose(fp);
 }
@@ -843,7 +713,7 @@ char read_price_invoice(int i, char *str)	// Devuelve el precio total en la fact
 		return -1;
 	}
 
-	read_col_file(fp, i, 5, str);
+	read_col_file(fp, i, 6, str);
 
 	fclose(fp);
 }
