@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include "tabdb.h"
-#include "caracteres.h"
+#include "handlers/tabdb.h"
+#include "handlers/caracteres.h"
 #define MAX 100
 #define RANGO 32
 #define ESC 27	// Codigo ASCII que hace referencia a la tecla ESC en el teclado
